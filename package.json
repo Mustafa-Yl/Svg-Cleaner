@@ -1,0 +1,20 @@
+{
+  "name": "myl-toolkit",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Tarayıcıda çalışan SVG temizleyici ve görsel dönüştürücü",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && node scripts/check-dist.mjs",
+    "check": "node scripts/check-dist.mjs",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "terser": "^5.49.2",
+    "vite": "^8.2.1"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

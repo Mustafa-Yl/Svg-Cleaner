@@ -1,0 +1,77 @@
+# GitHub Pages yayını
+#
+# main dalına her push'ta derler ve yayınlar. Yayına YALNIZCA dist/ klasörü
+# gider — DEVELOPMENT.md, README.md, js/ kaynakları, eski script.js gibi
+# dosyalar hiçbir zaman siteye kopyalanmaz.
+#
+# Kurulum (bir kez):
+#   GitHub → repo → Settings → Pages → Build and deployment →
+#   Source: "GitHub Actions" seç. Başka ayar gerekmez.
+
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # Actions sekmesinden elle de tetiklenebilir
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Aynı anda tek yayın; yeni push eskisini iptal etmez, sıraya alır
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Bağımlılıkları kur
+        run: npm ci
+
+      - name: Derle
+        run: npm run build
+
+      - name: Derleme çıktısını özetle
+        run: |
+          echo "### Yayınlanacak dosyalar" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          find dist -type f | sort | sed 's|^dist/||' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "Toplam: $(du -sh dist | cut -f1)" >> $GITHUB_STEP_SUMMARY
+
+      - name: Sızıntı kontrolü
+        # Geliştirme dosyaları yanlışlıkla derlemeye girerse yayını durdur
+        run: |
+          if find dist -iname "DEVELOPMENT.md" -o -iname "README.md" -o -iname "*.map" | grep -q .; then
+            echo "::error::Geliştirme dosyaları dist/ içine sızmış!"
+            find dist -iname "DEVELOPMENT.md" -o -iname "README.md" -o -iname "*.map"
+            exit 1
+          fi
+          echo "Temiz."
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

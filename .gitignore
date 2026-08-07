@@ -1,0 +1,15 @@
+# Bağımlılıklar
+node_modules/
+
+# Derleme çıktısı — GitHub Actions üretip yayınlıyor, repoda tutmuyoruz
+dist/
+
+# Editör / işletim sistemi
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Günlükler
+*.log
+npm-debug.log*
